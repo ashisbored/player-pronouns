@@ -86,7 +86,7 @@ public class Config {
                 String s = Files.readString(path);
                 JsonElement ele = JsonParser.parseString(s);
                 DataResult<Config> result = CODEC.decode(JsonOps.INSTANCE, ele).map(Pair::getFirst);
-                Optional<DataResult.PartialResult<Config>> err = result.error();
+                Optional<DataResult.Error<Config>> err = result.error();
                 err.ifPresent(e -> PlayerPronouns.LOGGER.warn("Failed to load config: {}", e.message()));
                 return result.result().orElseGet(Config::new);
             } catch (IOException e) {

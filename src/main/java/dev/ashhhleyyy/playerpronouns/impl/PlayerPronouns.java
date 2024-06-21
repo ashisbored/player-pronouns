@@ -138,10 +138,10 @@ public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader
             PronounsCommand.register(dispatcher);
         });
 
-        Placeholders.register(new Identifier(MOD_ID, "pronouns"), (ctx, argument) ->
+        Placeholders.register(Identifier.of(MOD_ID, "pronouns"), (ctx, argument) ->
                 fromContext(ctx, argument, true));
 
-        Placeholders.register(new Identifier(MOD_ID, "raw_pronouns"), (ctx, argument) ->
+        Placeholders.register(Identifier.of(MOD_ID, "raw_pronouns"), (ctx, argument) ->
                 fromContext(ctx, argument, false));
 
         PronounsApi.initReader(this);
