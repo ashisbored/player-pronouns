@@ -1,10 +1,10 @@
 plugins {
-    id("fabric-loom") version "1.5.+"
+    id("fabric-loom") version "1.7-SNAPSHOT"
     id("com.modrinth.minotaur") version "2.+"
     `maven-publish`
 }
 
-version = "2.1.0+1.20.4"
+version = "2.1.0+1.21"
 group = "dev.ashhhleyyy"
 
 repositories {
@@ -51,15 +51,15 @@ tasks.processResources {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 
     withSourcesJar()
 }
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
-    options.release.set(17)
+    options.release.set(21)
 }
 
 tasks.jar {
