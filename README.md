@@ -9,6 +9,9 @@ It will suggest pronouns that are configured by the server admins, along with th
 
 ## For server owners
 
+> [!NOTE]
+> Player Pronouns needs another mod configured to actually display pronouns, otherwise users will be able to set pronouns, but will not see them anywhere.
+
 ### Configuration
 The mod should work out of the box without any configuration, however if you want player's pronouns to be visible, you probably want to use the placeholder somewhere.
 
