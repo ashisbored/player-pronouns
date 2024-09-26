@@ -51,6 +51,10 @@ public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader
         put("other", "other");
     }};
 
+    public static Identifier identifier(String path) {
+        return Identifier.of(MOD_ID, path);
+    }
+
     private PronounDatabase pronounDatabase;
     public static Config config;
 
@@ -138,10 +142,10 @@ public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader
             PronounsCommand.register(dispatcher);
         });
 
-        Placeholders.register(Identifier.of(MOD_ID, "pronouns"), (ctx, argument) ->
+        Placeholders.register(PlayerPronouns.identifier("pronouns"), (ctx, argument) ->
                 fromContext(ctx, argument, true));
 
-        Placeholders.register(Identifier.of(MOD_ID, "raw_pronouns"), (ctx, argument) ->
+        Placeholders.register(PlayerPronouns.identifier("raw_pronouns"), (ctx, argument) ->
                 fromContext(ctx, argument, false));
 
         PronounsApi.initReader(this);
