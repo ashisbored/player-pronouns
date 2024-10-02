@@ -25,7 +25,8 @@ public class Config {
             Codec.BOOL.fieldOf("enable_pronoundb_sync").forGetter(config -> config.enablePronounDBSync),
             Pronoun.CODEC.listOf().fieldOf("single").forGetter(config -> config.single),
             Pronoun.CODEC.listOf().fieldOf("pairs").forGetter(config -> config.pairs),
-            Codec.STRING.optionalFieldOf("default_placeholder", "Unknown").forGetter(config -> config.defaultPlaceholder)
+            Codec.STRING.optionalFieldOf("default_placeholder", "Unknown").forGetter(config -> config.defaultPlaceholder),
+            Codec.INT.fieldOf("max_length").forGetter(config -> config.maxLength)
     ).apply(instance, Config::new));
 
     private final boolean allowCustom;
@@ -33,17 +34,19 @@ public class Config {
     private final List<Pronoun> single;
     private final List<Pronoun> pairs;
     private final String defaultPlaceholder;
+    private final int maxLength;
 
-    private Config(boolean allowCustom, boolean enablePronounDBSync, List<Pronoun> single, List<Pronoun> pairs, String defaultPlaceholder) {
+    private Config(boolean allowCustom, boolean enablePronounDBSync, List<Pronoun> single, List<Pronoun> pairs, String defaultPlaceholder,int maxLength) {
         this.allowCustom = allowCustom;
         this.enablePronounDBSync = enablePronounDBSync;
         this.single = single;
         this.pairs = pairs;
         this.defaultPlaceholder = defaultPlaceholder;
+        this.maxLength = maxLength;
     }
 
     private Config() {
-        this(true, true, Collections.emptyList(), Collections.emptyList(), "Unknown");
+        this(true, true, Collections.emptyList(), Collections.emptyList(), "Unknown",-1);
     }
 
     public boolean allowCustom() {
@@ -65,6 +68,8 @@ public class Config {
     public String getDefaultPlaceholder() {
         return defaultPlaceholder;
     }
+
+    public int getMaxLength() {return maxLength;}
 
     public static Config load() {
         Path path = FabricLoader.getInstance().getConfigDir().resolve("player-pronouns.json");

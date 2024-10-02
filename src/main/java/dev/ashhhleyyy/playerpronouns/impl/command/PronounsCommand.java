@@ -36,6 +36,21 @@ public class PronounsCommand {
                                 return 0;
                             }
 
+                            // Check the length
+                            int maxLength = PlayerPronouns.config.getMaxLength();
+
+                            // If it's 0 or less that mean it's disabled
+                            if (!(maxLength<=0)) {
+                                if (pronounsString.length()>maxLength){
+                                    // Pronouns too big:
+                                    ctx.getSource().sendFeedback(() -> Text.literal("Your pronouns is too big for this server.\nPlease make it smaller or use an acronym")
+                                            .formatted(Formatting.RED), false);
+                                    return Command.SINGLE_SUCCESS;
+                                }
+                            }
+
+
+
                             Pronouns pronouns;
                             if (pronounTexts.containsKey(pronounsString)) {
                                 pronouns = new Pronouns(pronounsString, pronounTexts.get(pronounsString), false);
@@ -43,6 +58,7 @@ public class PronounsCommand {
                                 pronouns = new Pronouns(pronounsString, Text.literal(pronounsString), false);
                             }
 
+                            assert player != null;
                             if (!PronounsApi.getSetter().setPronouns(player, pronouns)) {
                                 ctx.getSource().sendError(Text.literal("Failed to update pronouns, sorry"));
                             } else {
@@ -64,6 +80,7 @@ public class PronounsCommand {
                 ).then(literal("unset")
                         .executes(ctx -> {
                             ServerPlayerEntity player = ctx.getSource().getPlayer();
+                            assert player != null;
                             if (!PronounsApi.getSetter().setPronouns(player, null)) {
                                 ctx.getSource().sendError(Text.literal("Failed to update pronouns, sorry"));
                             } else {
