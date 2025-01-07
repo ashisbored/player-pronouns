@@ -1,9 +1,8 @@
 package dev.ashhhleyyy.playerpronouns.impl.data;
 
-import org.jetbrains.annotations.Nullable;
-
 import dev.ashhhleyyy.playerpronouns.api.Pronouns;
 import dev.ashhhleyyy.playerpronouns.impl.PlayerPronouns;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -13,10 +12,6 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 public interface PronounDatabase {
-    void put(UUID player, @Nullable Pronouns pronouns);
-    @Nullable Pronouns get(UUID player);
-    void save() throws IOException;
-
     static PronounDatabase load(Path path) throws IOException {
         if (!Files.exists(path)) {
             // Will create a new empty database.
@@ -42,4 +37,10 @@ public interface PronounDatabase {
 
         return PalettePronounDatabase.load(path);
     }
+
+    void put(UUID player, @Nullable Pronouns pronouns);
+
+    @Nullable Pronouns get(UUID player);
+
+    void save() throws IOException;
 }

@@ -2,7 +2,6 @@ package dev.ashhhleyyy.playerpronouns.impl.data;
 
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
-
 import dev.ashhhleyyy.playerpronouns.api.Pronouns;
 import dev.ashhhleyyy.playerpronouns.impl.PlayerPronouns;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -37,6 +36,58 @@ public class PalettePronounDatabase implements PronounDatabase {
 
     private PalettePronounDatabase(Path databasePath) {
         this(databasePath, new Object2ObjectOpenHashMap<>());
+    }
+
+    public static PalettePronounDatabase load(Path path) throws IOException {
+        if (!Files.exists(path)) {
+            return new PalettePronounDatabase(path);
+        }
+
+        try (InputStream is = Files.newInputStream(path);
+             DataInputStream in = new DataInputStream(is)) {
+
+            short magic = in.readShort();
+            if (magic != 0x4568) {
+                throw new IOException("Invalid DB magic: " + magic);
+            }
+
+            int version = in.readInt();
+            if (version > VERSION_NUMBER) {
+                throw new IOException("DB version " + version + " is greater than the latest supported: " + version);
+            }
+
+            List<Pronouns> palette = new ArrayList<>();
+            int paletteSize = in.readInt();
+            for (int i = 0; i < paletteSize; i++) {
+                String s = in.readUTF();
+                Optional<Pronouns> optionalPronouns = Pronouns.CODEC.decode(JsonOps.INSTANCE, JsonParser.parseString(s)).resultOrPartial(e -> {
+                    throw new RuntimeException(new IOException("Invalid pronouns in database: " + s));
+                }).map(com.mojang.datafixers.util.Pair::getFirst);
+                if (optionalPronouns.isEmpty()) {
+                    throw new IOException("Invalid pronouns in database: " + s);
+                }
+                palette.add(optionalPronouns.get());
+            }
+
+            Object2ObjectMap<UUID, Pronouns> data = new Object2ObjectOpenHashMap<>();
+
+            // V1 Parsing
+            if (version == 1) {
+                int playerCount = in.readInt();
+                for (int i = 0; i < playerCount; i++) {
+                    long mostSigBits = in.readLong();
+                    long leastSigBits = in.readLong();
+                    UUID uuid = new UUID(mostSigBits, leastSigBits);
+                    int pronounIndex = in.readInt();
+                    Pronouns old = data.put(uuid, palette.get(pronounIndex));
+                    if (old != null) {
+                        PlayerPronouns.LOGGER.warn("Duplicate UUID in database: {}", uuid);
+                    }
+                }
+            }
+
+            return new PalettePronounDatabase(path, data);
+        }
     }
 
     @Override
@@ -90,57 +141,5 @@ public class PalettePronounDatabase implements PronounDatabase {
             values.put(entry.getKey(), palette.indexOf(entry.getValue()));
         }
         return new Pair<>(palette, values);
-    }
-
-    public static PalettePronounDatabase load(Path path) throws IOException {
-        if (!Files.exists(path)) {
-            return new PalettePronounDatabase(path);
-        }
-
-        try (InputStream is = Files.newInputStream(path);
-             DataInputStream in = new DataInputStream(is)) {
-
-            short magic = in.readShort();
-            if (magic != 0x4568) {
-                throw new IOException("Invalid DB magic: " + magic);
-            }
-
-            int version = in.readInt();
-            if (version > VERSION_NUMBER) {
-                throw new IOException("DB version " + version + " is greater than the latest supported: " + version);
-            }
-
-            List<Pronouns> palette = new ArrayList<>();
-            int paletteSize = in.readInt();
-            for (int i = 0; i < paletteSize; i++) {
-                String s = in.readUTF();
-                Optional<Pronouns> optionalPronouns = Pronouns.CODEC.decode(JsonOps.INSTANCE, JsonParser.parseString(s)).resultOrPartial(e -> {
-                    throw new RuntimeException(new IOException("Invalid pronouns in database: " + s));
-                }).map(com.mojang.datafixers.util.Pair::getFirst);
-                if (optionalPronouns.isEmpty()) {
-                    throw new IOException("Invalid pronouns in database: " + s);
-                }
-                palette.add(optionalPronouns.get());
-            }
-
-            Object2ObjectMap<UUID, Pronouns> data = new Object2ObjectOpenHashMap<>();
-
-            // V1 Parsing
-            if (version == 1) {
-                int playerCount = in.readInt();
-                for (int i = 0; i < playerCount; i++) {
-                    long mostSigBits = in.readLong();
-                    long leastSigBits = in.readLong();
-                    UUID uuid = new UUID(mostSigBits, leastSigBits);
-                    int pronounIndex = in.readInt();
-                    Pronouns old = data.put(uuid, palette.get(pronounIndex));
-                    if (old != null) {
-                        PlayerPronouns.LOGGER.warn("Duplicate UUID in database: " + uuid);
-                    }
-                }
-            }
-
-            return new PalettePronounDatabase(path, data);
-        }
     }
 }

@@ -3,7 +3,6 @@ package dev.ashhhleyyy.playerpronouns.impl.data;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import dev.ashhhleyyy.playerpronouns.api.Pronoun;
 import dev.ashhhleyyy.playerpronouns.impl.Config;
 import dev.ashhhleyyy.playerpronouns.impl.PlayerPronouns;
@@ -32,6 +31,45 @@ public class PronounList {
         this.customSingle = new ArrayList<>(customSingle);
         this.customPairs = new ArrayList<>(customPairs);
         this.calculatedPronounStrings = this.computePossibleCombinations();
+    }
+
+    public static void load(Config config) {
+        if (INSTANCE != null) {
+            INSTANCE.reload(config);
+            return;
+        }
+
+        Pair<List<Pronoun>, List<Pronoun>> defaults = loadDefaults();
+        INSTANCE = new PronounList(
+                defaults.getLeft(),
+                defaults.getRight(),
+                config.getSingle(),
+                config.getPairs()
+        );
+    }
+
+    public static PronounList get() {
+        if (INSTANCE == null) {
+            throw new IllegalStateException("PronounList has not been loaded!");
+        }
+        return INSTANCE;
+    }
+
+    private static Pair<List<Pronoun>, List<Pronoun>> loadDefaults() {
+        try (InputStream is = Objects.requireNonNull(PronounList.class.getResourceAsStream("/default_pronouns.json"));
+             InputStreamReader reader = new InputStreamReader(is)) {
+            JsonObject ele = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonArray jsonSingle = ele.getAsJsonArray("single");
+            JsonArray jsonPairs = ele.getAsJsonArray("pairs");
+            List<Pronoun> single = new ArrayList<>();
+            List<Pronoun> pairs = new ArrayList<>();
+            jsonSingle.forEach(e -> single.add(new Pronoun(e.getAsString(), Style.EMPTY)));
+            jsonPairs.forEach(e -> pairs.add(new Pronoun(e.getAsString(), Style.EMPTY)));
+            return new Pair<>(single, pairs);
+        } catch (IOException e) {
+            PlayerPronouns.LOGGER.error("Failed to load default pronouns!", e);
+            return new Pair<>(Collections.emptyList(), Collections.emptyList());
+        }
     }
 
     public Map<String, Text> getCalculatedPronounStrings() {
@@ -64,21 +102,6 @@ public class PronounList {
         return ret;
     }
 
-    public static void load(Config config) {
-        if (INSTANCE != null) {
-            INSTANCE.reload(config);
-            return;
-        }
-
-        Pair<List<Pronoun>, List<Pronoun>> defaults = loadDefaults();
-        INSTANCE = new PronounList(
-                defaults.getLeft(),
-                defaults.getRight(),
-                config.getSingle(),
-                config.getPairs()
-        );
-    }
-
     private void reload(Config config) {
         this.customSingle.clear();
         this.customPairs.clear();
@@ -86,29 +109,5 @@ public class PronounList {
         this.customPairs.addAll(config.getPairs());
         this.calculatedPronounStrings.clear();
         this.calculatedPronounStrings.putAll(this.computePossibleCombinations());
-    }
-
-    public static PronounList get() {
-        if (INSTANCE == null) {
-            throw new IllegalStateException("PronounList has not been loaded!");
-        }
-        return INSTANCE;
-    }
-
-    private static Pair<List<Pronoun>, List<Pronoun>> loadDefaults() {
-        try (InputStream is = Objects.requireNonNull(PronounList.class.getResourceAsStream("/default_pronouns.json"));
-             InputStreamReader reader = new InputStreamReader(is)) {
-            JsonObject ele = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray jsonSingle = ele.getAsJsonArray("single");
-            JsonArray jsonPairs = ele.getAsJsonArray("pairs");
-            List<Pronoun> single = new ArrayList<>();
-            List<Pronoun> pairs = new ArrayList<>();
-            jsonSingle.forEach(e -> single.add(new Pronoun(e.getAsString(), Style.EMPTY)));
-            jsonPairs.forEach(e -> pairs.add(new Pronoun(e.getAsString(), Style.EMPTY)));
-            return new Pair<>(single, pairs);
-        } catch (IOException e) {
-            PlayerPronouns.LOGGER.error("Failed to load default pronouns!", e);
-            return new Pair<>(Collections.emptyList(), Collections.emptyList());
-        }
     }
 }

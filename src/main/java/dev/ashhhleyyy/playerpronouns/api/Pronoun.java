@@ -5,9 +5,11 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-
 import dev.ashhhleyyy.playerpronouns.impl.PlayerPronouns;
-import net.minecraft.text.*;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,39 +17,15 @@ import java.util.Optional;
 
 /**
  * A single pronoun, which consists of the word itself, along with an associated style.
+ *
  * @param pronoun The text of this pronoun
- * @param style An associated style that is used for display as {@link Text}
+ * @param style   An associated style that is used for display as {@link Text}
  */
 public record Pronoun(
         String pronoun,
         Style style
 ) {
     public static final Codec<Pronoun> CODEC = new PronounCodec();
-
-    private static class PronounCodec implements Codec<Pronoun> {
-        private static final Codec<Pronoun> OBJECT_CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                Codec.STRING.fieldOf("pronoun").forGetter(Pronoun::pronoun),
-                Codec.STRING.listOf().xmap(Pronoun::styleFrom, Pronoun::fromStyle).fieldOf("style").forGetter(Pronoun::style)
-        ).apply(instance, Pronoun::new));
-
-        private PronounCodec() { }
-
-        @Override
-        public <T> DataResult<Pair<Pronoun, T>> decode(DynamicOps<T> ops, T input) {
-            Optional<String> asString = ops.getStringValue(input).result();
-            return asString.map(s -> DataResult.success(new Pair<>(new Pronoun(s, Style.EMPTY), ops.empty())))
-                    .orElseGet(() -> OBJECT_CODEC.decode(ops, input));
-        }
-
-        @Override
-        public <T> DataResult<T> encode(Pronoun input, DynamicOps<T> ops, T prefix) {
-            if (input.style.isEmpty()) {
-                return ops.mergeToPrimitive(prefix, ops.createString(input.pronoun));
-            } else {
-                return OBJECT_CODEC.encode(input, ops, prefix);
-            }
-        }
-    }
 
     private static Style styleFrom(List<String> formatting) {
         Style style = Style.EMPTY;
@@ -112,5 +90,31 @@ public record Pronoun(
     @Override
     public int hashCode() {
         return this.pronoun.hashCode();
+    }
+
+    private static class PronounCodec implements Codec<Pronoun> {
+        private static final Codec<Pronoun> OBJECT_CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.STRING.fieldOf("pronoun").forGetter(Pronoun::pronoun),
+                Codec.STRING.listOf().xmap(Pronoun::styleFrom, Pronoun::fromStyle).fieldOf("style").forGetter(Pronoun::style)
+        ).apply(instance, Pronoun::new));
+
+        private PronounCodec() {
+        }
+
+        @Override
+        public <T> DataResult<Pair<Pronoun, T>> decode(DynamicOps<T> ops, T input) {
+            Optional<String> asString = ops.getStringValue(input).result();
+            return asString.map(s -> DataResult.success(new Pair<>(new Pronoun(s, Style.EMPTY), ops.empty())))
+                    .orElseGet(() -> OBJECT_CODEC.decode(ops, input));
+        }
+
+        @Override
+        public <T> DataResult<T> encode(Pronoun input, DynamicOps<T> ops, T prefix) {
+            if (input.style.isEmpty()) {
+                return ops.mergeToPrimitive(prefix, ops.createString(input.pronoun));
+            } else {
+                return OBJECT_CODEC.encode(input, ops, prefix);
+            }
+        }
     }
 }

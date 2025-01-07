@@ -10,28 +10,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.gradle/loom-cache
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-
-      - uses: actions/checkout@v2
-      - name: Set up JDK
-        uses: actions/setup-java@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Validate gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
         with:
           java-version: 21
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+          distribution: temurin
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
 
       - name: Build and publish with gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: modrinth publish
+        run: ./gradlew modrinth publish
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
@@ -39,7 +33,7 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
       - name: Upload GitHub release
-        uses: AButler/upload-release-assets@v2.0
+        uses: AButler/upload-release-assets@v3.0
         with:
           files: 'build/libs/player-pronouns-*.jar'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
