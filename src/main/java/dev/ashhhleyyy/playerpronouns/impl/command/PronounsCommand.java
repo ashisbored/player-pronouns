@@ -58,7 +58,7 @@ public class PronounsCommand {
                         })
                 ).then(literal("unset")
                         .executes(ctx -> {
-                            ServerPlayerEntity player = ctx.getSource().getPlayer();
+                            ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
                             if (!PronounsApi.getSetter().setPronouns(player, null)) {
                                 ctx.getSource().sendError(Text.literal("Failed to update pronouns, sorry"));
                             } else {
