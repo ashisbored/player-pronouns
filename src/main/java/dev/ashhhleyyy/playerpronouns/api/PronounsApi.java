@@ -1,5 +1,8 @@
 package dev.ashhhleyyy.playerpronouns.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
@@ -12,6 +15,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public final class PronounsApi {
     private static @Nullable PronounReader READER = null;
     private static @Nullable PronounSetter SETTER = null;
+    private static final List<ExtraPronounProvider> PROVIDERS = new ArrayList<>();
 
     /**
      * @return The currently initialised {@link PronounReader}
@@ -35,7 +39,7 @@ public final class PronounsApi {
 
     /**
      * Makes the passed reader be set as the default.
-     * 
+     * <p>
      * This should not be called by most mods, unless they are implementing a custom backend.
      * 
      * @param reader The reader to configure
@@ -49,7 +53,7 @@ public final class PronounsApi {
 
     /**
      * Makes the passed setter be set as the default.
-     * 
+     * <p.
      * This should not be called by most mods, unless they are implementing a custom backend.
      * 
      * @param setter The setter to configure
@@ -61,9 +65,17 @@ public final class PronounsApi {
         SETTER = setter;
     }
 
+    public static void registerPronounProvider(ExtraPronounProvider provider) {
+        PROVIDERS.add(provider);
+    }
+
+    public static List<ExtraPronounProvider> getExtraPronounProviders() {
+        return Collections.unmodifiableList(PROVIDERS);
+    }
+
     /**
      * Allows updating a player's {@link Pronouns}.
-     * 
+     * <p>
      * Methods in this class may invoke blocking IO operations to save the database to disk.
      */
     public interface PronounSetter {

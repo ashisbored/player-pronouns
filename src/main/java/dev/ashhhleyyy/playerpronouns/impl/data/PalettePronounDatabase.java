@@ -135,7 +135,7 @@ public class PalettePronounDatabase implements PronounDatabase {
                     int pronounIndex = in.readInt();
                     Pronouns old = data.put(uuid, palette.get(pronounIndex));
                     if (old != null) {
-                        PlayerPronouns.LOGGER.warn("Duplicate UUID in database: " + uuid);
+                        PlayerPronouns.LOGGER.warn("Duplicate UUID in database: {}", uuid);
                     }
                 }
             }

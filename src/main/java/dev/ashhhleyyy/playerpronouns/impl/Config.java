@@ -19,39 +19,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class Config {
+public record Config(
+        boolean allowCustom,
+        List<Pronoun> single,
+        List<Pronoun> pairs,
+        String defaultPlaceholder,
+        Integrations integrations
+) {
     private static final Codec<Config> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codec.BOOL.fieldOf("allow_custom").forGetter(config -> config.allowCustom),
-            Codec.BOOL.fieldOf("enable_pronoundb_sync").forGetter(config -> config.enablePronounDBSync),
-            Pronoun.CODEC.listOf().fieldOf("single").forGetter(config -> config.single),
-            Pronoun.CODEC.listOf().fieldOf("pairs").forGetter(config -> config.pairs),
-            Codec.STRING.optionalFieldOf("default_placeholder", "Unknown").forGetter(config -> config.defaultPlaceholder)
+            Codec.BOOL.fieldOf("allow_custom").forGetter(Config::allowCustom),
+            Pronoun.CODEC.listOf().fieldOf("single").forGetter(Config::single),
+            Pronoun.CODEC.listOf().fieldOf("pairs").forGetter(Config::pairs),
+            Codec.STRING.optionalFieldOf("default_placeholder", "Unknown").forGetter(Config::defaultPlaceholder),
+            Integrations.CODEC.fieldOf("integrations").forGetter(Config::integrations)
     ).apply(instance, Config::new));
 
-    private final boolean allowCustom;
-    private final boolean enablePronounDBSync;
-    private final List<Pronoun> single;
-    private final List<Pronoun> pairs;
-    private final String defaultPlaceholder;
-
-    private Config(boolean allowCustom, boolean enablePronounDBSync, List<Pronoun> single, List<Pronoun> pairs, String defaultPlaceholder) {
-        this.allowCustom = allowCustom;
-        this.enablePronounDBSync = enablePronounDBSync;
-        this.single = single;
-        this.pairs = pairs;
-        this.defaultPlaceholder = defaultPlaceholder;
-    }
-
     private Config() {
-        this(true, true, Collections.emptyList(), Collections.emptyList(), "Unknown");
+        this(true, Collections.emptyList(), Collections.emptyList(), "Unknown", new Integrations());
     }
 
     public boolean allowCustom() {
         return allowCustom;
-    }
-
-    public boolean enablePronounDBSync() {
-        return enablePronounDBSync;
     }
 
     public List<Pronoun> getSingle() {
@@ -88,11 +76,32 @@ public class Config {
                 DataResult<Config> result = CODEC.decode(JsonOps.INSTANCE, ele).map(Pair::getFirst);
                 Optional<DataResult.Error<Config>> err = result.error();
                 err.ifPresent(e -> PlayerPronouns.LOGGER.warn("Failed to load config: {}", e.message()));
-                return result.result().orElseGet(Config::new);
+                Config config = result.result().orElseGet(Config::new);
+                if (err.isEmpty() && ele.getAsJsonObject().has("enable_pronoundb_sync")) {
+                    if (!ele.getAsJsonObject().get("enable_pronoundb_sync").getAsBoolean()) {
+                        PlayerPronouns.LOGGER.warn("Config option `enable_pronoundb_sync` is legacy and will be removed in the next release. Please set `integrations.pronoundb` to `false` instead.");
+                        config = new Config(config.allowCustom, config.single, config.pairs, config.defaultPlaceholder, new Integrations(
+                                false
+                        ));
+                    }
+                }
+                return config;
             } catch (IOException e) {
                 PlayerPronouns.LOGGER.warn("Failed to load config!", e);
                 return new Config();
             }
+        }
+    }
+
+    public record Integrations(
+            boolean pronounDB
+    ) {
+        private static final Codec<Integrations> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.BOOL.fieldOf("pronoun_db").forGetter(Integrations::pronounDB)
+        ).apply(instance, Integrations::new));
+
+        private Integrations() {
+            this(true);
         }
     }
 }

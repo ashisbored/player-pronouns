@@ -27,7 +27,7 @@ public class PronounsCommand {
                 .then(literal("set")
                     .then(pronouns("pronouns")
                         .executes(ctx -> {
-                            ServerPlayerEntity player = ctx.getSource().getPlayer();
+                            ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
                             String pronounsString = getString(ctx, "pronouns");
 
                             Map<String, Text> pronounTexts = PronounList.get().getCalculatedPronounStrings();
@@ -36,12 +36,7 @@ public class PronounsCommand {
                                 return 0;
                             }
 
-                            Pronouns pronouns;
-                            if (pronounTexts.containsKey(pronounsString)) {
-                                pronouns = new Pronouns(pronounsString, pronounTexts.get(pronounsString), false);
-                            } else {
-                                pronouns = new Pronouns(pronounsString, Text.literal(pronounsString), false);
-                            }
+                            Pronouns pronouns = Pronouns.fromString(pronounsString);
 
                             if (!PronounsApi.getSetter().setPronouns(player, pronouns)) {
                                 ctx.getSource().sendError(Text.literal("Failed to update pronouns, sorry"));
