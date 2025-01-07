@@ -62,34 +62,34 @@ public class PronounDbClient implements ExtraPronounProvider {
                         return Optional.of(resp.body());
                     });
             return completableFuture.thenApply(b -> b.flatMap(body -> {
-                        var json = JsonHelper.deserialize(body);
-                        String player = playerId.toString();
-                        if (json.has(player) && json.getAsJsonObject(player).getAsJsonObject("sets").has("en")) {
-                            var pronounList = json.getAsJsonObject(player).getAsJsonObject("sets").getAsJsonArray("en");
-                            StringBuilder pronounsBuilder = new StringBuilder();
-                            if (pronounList.isEmpty()) {
-                                return Optional.empty();
-                            } else if (pronounList.size() == 1) {
-                                pronounsBuilder.append(PRONOUNDB_ID_MAP.get(pronounList.get(0).getAsString()));
-                            } else {
-                                for (var pronoun : pronounList) {
-                                    if (!pronounsBuilder.isEmpty()) {
-                                        pronounsBuilder.append('/');
-                                    }
-                                    pronounsBuilder.append(pronoun.getAsString());
-                                }
+                var json = JsonHelper.deserialize(body);
+                String player = playerId.toString();
+                if (json.has(player) && json.getAsJsonObject(player).getAsJsonObject("sets").has("en")) {
+                    var pronounList = json.getAsJsonObject(player).getAsJsonObject("sets").getAsJsonArray("en");
+                    StringBuilder pronounsBuilder = new StringBuilder();
+                    if (pronounList.isEmpty()) {
+                        return Optional.empty();
+                    } else if (pronounList.size() == 1) {
+                        pronounsBuilder.append(PRONOUNDB_ID_MAP.get(pronounList.get(0).getAsString()));
+                    } else {
+                        for (var pronoun : pronounList) {
+                            if (!pronounsBuilder.isEmpty()) {
+                                pronounsBuilder.append('/');
                             }
-                            String pronouns = pronounsBuilder.toString();
-                            if ("unspecified".equals(pronouns)) {
-                                return Optional.empty();
-                            } else {
-                                return Optional.of(pronouns);
-                            }
-                        } else {
-                            LOGGER.error("malformed response from pronoundb");
-                            return Optional.empty();
+                            pronounsBuilder.append(pronoun.getAsString());
                         }
-                    }));
+                    }
+                    String pronouns = pronounsBuilder.toString();
+                    if ("unspecified".equals(pronouns)) {
+                        return Optional.empty();
+                    } else {
+                        return Optional.of(pronouns);
+                    }
+                } else {
+                    LOGGER.error("malformed response from pronoundb");
+                    return Optional.empty();
+                }
+            }));
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }

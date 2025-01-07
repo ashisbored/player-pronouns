@@ -12,7 +12,10 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface ExtraPronounProvider {
     CompletableFuture<Optional<String>> provideExtras(UUID playerId);
+
     Identifier getId();
+
     Text getName();
+
     boolean enabled();
 }

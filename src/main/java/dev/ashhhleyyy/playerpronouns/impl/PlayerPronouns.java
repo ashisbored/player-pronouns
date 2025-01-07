@@ -29,24 +29,32 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.UUID;
+
+import static java.util.Calendar.getInstance;
 
 public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader, PronounsApi.PronounSetter {
     public static final Logger LOGGER = LoggerFactory.getLogger(PlayerPronouns.class);
     public static final String MOD_ID = "playerpronouns";
     public static final String USER_AGENT = "player-pronouns/1.0 (+https://ashhhleyyy.dev/projects/2021/player-pronouns)";
+    public static final byte[][] OWOS = new byte[][]{new byte[]{73, 110, 106, 101, 99, 116, 105, 110, 103, 32, 119, 111, 107, 101, 46, 46, 46}, new byte[]{85, 112, 103, 114, 97, 100, 105, 110, 103, 32, 97, 109, 97, 116, 101, 117, 114, 32, 110, 111, 117, 110, 115, 46, 46, 46}, new byte[]{80, 114, 101, 112, 97, 114, 105, 110, 103, 32, 65, 98, 115, 116, 114, 97, 99, 116, 80, 114, 111, 110, 111, 117, 110, 80, 114, 111, 118, 105, 100, 101, 114, 70, 97, 99, 116, 111, 114, 121, 46, 46, 46}, new byte[]{84, 114, 97, 110, 115, 105, 110, 103, 32, 103, 101, 110, 100, 101, 114, 115, 46, 46, 46}, new byte[]{77, 97, 107, 105, 110, 103, 32, 116, 104, 101, 32, 102, 114, 111, 103, 115, 32, 103, 97, 121, 46, 46, 46}, new byte[]{70, 108, 121, 105, 110, 103, 32, 102, 108, 97, 103, 115, 46, 46, 46}, new byte[]{72, 97, 112, 112, 121, 32, 112, 114, 105, 100, 101, 32, 109, 111, 110, 116, 104, 33, 33}};
+    public static Config config;
+    private PronounDatabase pronounDatabase;
+    private PronounDbClient pronounDbClient;
 
     public static Identifier identifier(String path) {
         return Identifier.of(MOD_ID, path);
     }
 
-    private PronounDatabase pronounDatabase;
-    private PronounDbClient pronounDbClient;
-    public static Config config;
+    public static void reloadConfig() {
+        config = Config.load();
+        PronounList.load(config);
+    }
 
     @Override
     public void onInitialize() {
-        LOGGER.info("Player Pronouns initialising...");
+        LOGGER.info("[PlayerPronouns] {}", new String(OWOS[getInstance().get(2) == 5 ? OWOS.length - 1 : new Random().nextInt(OWOS.length - 1)]));
 
         config = Config.load();
         PronounList.load(config);
@@ -159,11 +167,6 @@ public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader
         } else {
             return PlaceholderResult.value(pronouns.raw());
         }
-    }
-
-    public static void reloadConfig() {
-        config = Config.load();
-        PronounList.load(config);
     }
 
     public boolean setPronouns(UUID playerId, @Nullable Pronouns pronouns) {

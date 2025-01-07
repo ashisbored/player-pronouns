@@ -12,10 +12,11 @@ import java.util.Optional;
 
 /**
  * A combined set of {@link Pronoun}s
- * @param raw The plain text version of this pronoun set
+ *
+ * @param raw       The plain text version of this pronoun set
  * @param formatted The styled version of this pronoun set
- * @param remote Whether the pronouns were fetched from a remote API
- * @param provider The ID of the external provider that these pronouns were fetched from
+ * @param remote    Whether the pronouns were fetched from a remote API
+ * @param provider  The ID of the external provider that these pronouns were fetched from
  */
 public record Pronouns(
         String raw,

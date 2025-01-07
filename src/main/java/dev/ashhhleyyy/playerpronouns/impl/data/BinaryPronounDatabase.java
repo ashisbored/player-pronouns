@@ -1,11 +1,10 @@
 package dev.ashhhleyyy.playerpronouns.impl.data;
 
+import dev.ashhhleyyy.playerpronouns.api.Pronouns;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
-
-import dev.ashhhleyyy.playerpronouns.api.Pronouns;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -24,34 +23,6 @@ public class BinaryPronounDatabase {
 
     private BinaryPronounDatabase(Path databasePath) {
         this(databasePath, new Object2ObjectOpenHashMap<>());
-    }
-
-    public void put(UUID uuid, @Nullable String pronouns) {
-        if (pronouns == null) {
-            this.data.remove(uuid);
-        } else {
-            this.data.put(uuid, pronouns);
-        }
-    }
-
-    public @Nullable String get(UUID uuid) {
-        return this.data.get(uuid);
-    }
-
-    public synchronized void save() throws IOException {
-        try (OutputStream os = Files.newOutputStream(this.databasePath);
-             DataOutputStream out = new DataOutputStream(os)) {
-
-            out.writeShort(0x4567); // some form of magic, idk
-            out.writeInt(data.size());
-
-            for (var entry : data.entrySet()) {
-                UUID uuid = entry.getKey();
-                out.writeLong(uuid.getMostSignificantBits());
-                out.writeLong(uuid.getLeastSignificantBits());
-                out.writeUTF(entry.getValue());
-            }
-        }
     }
 
     public static PalettePronounDatabase convert(Path path) throws IOException {
@@ -94,6 +65,34 @@ public class BinaryPronounDatabase {
             }
 
             return new BinaryPronounDatabase(path, data);
+        }
+    }
+
+    public void put(UUID uuid, @Nullable String pronouns) {
+        if (pronouns == null) {
+            this.data.remove(uuid);
+        } else {
+            this.data.put(uuid, pronouns);
+        }
+    }
+
+    public @Nullable String get(UUID uuid) {
+        return this.data.get(uuid);
+    }
+
+    public synchronized void save() throws IOException {
+        try (OutputStream os = Files.newOutputStream(this.databasePath);
+             DataOutputStream out = new DataOutputStream(os)) {
+
+            out.writeShort(0x4567); // some form of magic, idk
+            out.writeInt(data.size());
+
+            for (var entry : data.entrySet()) {
+                UUID uuid = entry.getKey();
+                out.writeLong(uuid.getMostSignificantBits());
+                out.writeLong(uuid.getLeastSignificantBits());
+                out.writeUTF(entry.getValue());
+            }
         }
     }
 }

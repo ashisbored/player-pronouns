@@ -8,7 +8,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-
 import dev.ashhhleyyy.playerpronouns.api.Pronoun;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -36,22 +35,6 @@ public record Config(
 
     private Config() {
         this(true, Collections.emptyList(), Collections.emptyList(), "Unknown", new Integrations());
-    }
-
-    public boolean allowCustom() {
-        return allowCustom;
-    }
-
-    public List<Pronoun> getSingle() {
-        return single;
-    }
-
-    public List<Pronoun> getPairs() {
-        return pairs;
-    }
-
-    public String getDefaultPlaceholder() {
-        return defaultPlaceholder;
     }
 
     public static Config load() {
@@ -91,6 +74,22 @@ public record Config(
                 return new Config();
             }
         }
+    }
+
+    public boolean allowCustom() {
+        return allowCustom;
+    }
+
+    public List<Pronoun> getSingle() {
+        return single;
+    }
+
+    public List<Pronoun> getPairs() {
+        return pairs;
+    }
+
+    public String getDefaultPlaceholder() {
+        return defaultPlaceholder;
     }
 
     public record Integrations(
