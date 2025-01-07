@@ -30,8 +30,15 @@ public class PronounsCommand {
                                     String pronounsString = getString(ctx, "pronouns");
 
                                     Map<String, Text> pronounTexts = PronounList.get().getCalculatedPronounStrings();
-                                    if (!PlayerPronouns.config.allowCustom() && !pronounTexts.containsKey(pronounsString)) {
+                                    boolean isCustom = !pronounTexts.containsKey(pronounsString);
+                                    if (isCustom && !PlayerPronouns.config.allowCustom()) {
                                         ctx.getSource().sendError(Text.literal("Custom pronouns have been disabled by the server administrator."));
+                                        return 0;
+                                    }
+
+                                    int maxLength = PlayerPronouns.config.maxPronounLength();
+                                    if (isCustom && maxLength > 0 && pronounsString.length() > maxLength) {
+                                        ctx.getSource().sendError(Text.literal("The server administrator has limited the length of custom pronouns to " + maxLength + "."));
                                         return 0;
                                     }
 

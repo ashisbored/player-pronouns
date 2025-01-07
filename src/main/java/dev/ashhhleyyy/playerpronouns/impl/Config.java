@@ -23,18 +23,20 @@ public record Config(
         List<Pronoun> single,
         List<Pronoun> pairs,
         String defaultPlaceholder,
-        Integrations integrations
+        Integrations integrations,
+        int maxPronounLength
 ) {
     private static final Codec<Config> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.BOOL.fieldOf("allow_custom").forGetter(Config::allowCustom),
             Pronoun.CODEC.listOf().fieldOf("single").forGetter(Config::single),
             Pronoun.CODEC.listOf().fieldOf("pairs").forGetter(Config::pairs),
             Codec.STRING.optionalFieldOf("default_placeholder", "Unknown").forGetter(Config::defaultPlaceholder),
-            Integrations.CODEC.fieldOf("integrations").forGetter(Config::integrations)
+            Integrations.CODEC.optionalFieldOf("integrations", new Integrations()).forGetter(Config::integrations),
+            Codec.INT.optionalFieldOf("max_pronoun_length", -1).forGetter(Config::maxPronounLength)
     ).apply(instance, Config::new));
 
     private Config() {
-        this(true, Collections.emptyList(), Collections.emptyList(), "Unknown", new Integrations());
+        this(true, Collections.emptyList(), Collections.emptyList(), "Unknown", new Integrations(), -1);
     }
 
     public static Config load() {
@@ -61,11 +63,11 @@ public record Config(
                 err.ifPresent(e -> PlayerPronouns.LOGGER.warn("Failed to load config: {}", e.message()));
                 Config config = result.result().orElseGet(Config::new);
                 if (err.isEmpty() && ele.getAsJsonObject().has("enable_pronoundb_sync")) {
-                    if (!ele.getAsJsonObject().get("enable_pronoundb_sync").getAsBoolean()) {
-                        PlayerPronouns.LOGGER.warn("Config option `enable_pronoundb_sync` is legacy and will be removed in the next release. Please set `integrations.pronoundb` to `false` instead.");
+                    if (ele.getAsJsonObject().get("enable_pronoundb_sync").getAsBoolean()) {
+                        PlayerPronouns.LOGGER.warn("Config option `enable_pronoundb_sync` is legacy and will be removed in the next release. Please set `integrations.pronoundb` to `true` instead.");
                         config = new Config(config.allowCustom, config.single, config.pairs, config.defaultPlaceholder, new Integrations(
-                                false
-                        ));
+                                true
+                        ), config.maxPronounLength);
                     }
                 }
                 return config;
@@ -100,7 +102,7 @@ public record Config(
         ).apply(instance, Integrations::new));
 
         private Integrations() {
-            this(true);
+            this(false);
         }
     }
 }
