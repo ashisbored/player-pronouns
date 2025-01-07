@@ -32,7 +32,7 @@ You can display the pronouns in any [TextPlaceholderAPI](https://github.com/Patb
 
 `<${player} [%playerpronouns:pronouns%]> ${message}`
 
-![](https://cdn.discordapp.com/attachments/859419898962116642/870732808367267881/in-chat.png)
+![An example of pronouns being show next to the player's name in chat](https://cdn.ashhhleyyy.dev/file/ashs-magic-bucket/player-pronouns/in-chat.png)
 
 ##### On the tab list with Styled Player List
 
@@ -47,7 +47,7 @@ You can display the pronouns in any [TextPlaceholderAPI](https://github.com/Patb
 }
 ```
 
-![](https://cdn.discordapp.com/attachments/859419898962116642/870739744286453820/2021-07-30_19.45.49.png)
+![An example of the player's pronouns being show next to their name in the player list](https://cdn.ashhhleyyy.dev/file/ashs-magic-bucket/player-pronouns/2021-07-30_19.45.49.png)
 
 #### Config structure
 
