@@ -1,8 +1,8 @@
 package dev.ashhhleyyy.playerpronouns.impl.interop;
 
 import dev.ashhhleyyy.playerpronouns.api.ExtraPronounProvider;
-import dev.ashhhleyyy.playerpronouns.api.Pronouns;
 import dev.ashhhleyyy.playerpronouns.impl.PlayerPronouns;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import org.slf4j.Logger;
@@ -98,5 +98,15 @@ public class PronounDbClient implements ExtraPronounProvider {
     @Override
     public Identifier getId() {
         return PlayerPronouns.identifier("pronoundb.org");
+    }
+
+    @Override
+    public Text getName() {
+        return Text.literal("PronounDB");
+    }
+
+    @Override
+    public boolean enabled() {
+        return PlayerPronouns.config.integrations().pronounDB();
     }
 }

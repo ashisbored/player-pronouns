@@ -1,5 +1,6 @@
 package dev.ashhhleyyy.playerpronouns.api;
 
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.util.Optional;
@@ -12,4 +13,6 @@ import java.util.concurrent.CompletableFuture;
 public interface ExtraPronounProvider {
     CompletableFuture<Optional<String>> provideExtras(UUID playerId);
     Identifier getId();
+    Text getName();
+    boolean enabled();
 }

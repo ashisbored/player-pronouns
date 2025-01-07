@@ -17,6 +17,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader, PronounsApi.PronounSetter {
     public static final Logger LOGGER = LoggerFactory.getLogger(PlayerPronouns.class);
@@ -81,18 +82,18 @@ public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader
                     if (currentPronouns.provider() != null) {
                         for (ExtraPronounProvider provider : PronounsApi.getExtraPronounProviders()) {
                             if (provider.getId().equals(currentPronouns.provider())) {
-                                this.tryFetchPronouns(server, uuid, Iterators.singletonIterator(provider));
+                                this.tryFetchPronouns(server, uuid, Iterators.singletonIterator(provider), true);
                                 break;
                             }
                         }
                     } else {
                         // remote pronouns without a provider are pre-multi-provider-support
                         // from when only pronoundb.org was supported
-                        this.tryFetchPronouns(server, uuid, Iterators.singletonIterator(pronounDbClient));
+                        this.tryFetchPronouns(server, uuid, Iterators.singletonIterator(pronounDbClient), true);
                     }
                 }
             } else {
-                this.tryFetchPronouns(server, uuid, providers);
+                this.tryFetchPronouns(server, uuid, providers, false);
             }
         });
 
@@ -109,21 +110,32 @@ public class PlayerPronouns implements ModInitializer, PronounsApi.PronounReader
 
         PronounsApi.initReader(this);
         PronounsApi.initSetter(this);
-        if (config.integrations().pronounDB()) {
-            PronounsApi.registerPronounProvider(this.pronounDbClient = new PronounDbClient());
-        }
+        PronounsApi.registerPronounProvider(this.pronounDbClient = new PronounDbClient());
     }
 
-    private void tryFetchPronouns(MinecraftServer server, UUID player, Iterator<ExtraPronounProvider> providers) {
+    private void tryFetchPronouns(MinecraftServer server, UUID player, Iterator<ExtraPronounProvider> providers, boolean alreadySet) {
         if (!providers.hasNext()) return;
         ExtraPronounProvider provider = providers.next();
+        if (!provider.enabled()) {
+            // skip disabled providers
+            tryFetchPronouns(server, player, providers, alreadySet);
+        }
         provider.provideExtras(player)
                 .thenAcceptAsync(optionalPronouns -> {
                     optionalPronouns.ifPresent(pronouns -> {
-                        setPronouns(player, Pronouns.fromString(pronouns, true, provider.getId()));
+                        Pronouns currentPronouns = getPronouns(player);
+                        Pronouns newPronouns = Pronouns.fromString(pronouns, true, provider.getId());
+                        setPronouns(player, newPronouns);
+                        if (!newPronouns.equals(currentPronouns) || !alreadySet) {
+                            ServerPlayerEntity playerEntity = server.getPlayerManager().getPlayer(player);
+                            if (playerEntity != null) {
+                                var message = Text.literal("Set your pronouns to " + pronouns + " (from ").append(provider.getName()).append(")");
+                                playerEntity.sendMessage(message.formatted(Formatting.GREEN));
+                            }
+                        }
                     });
                     if (optionalPronouns.isEmpty()) {
-                        tryFetchPronouns(server, player, providers);
+                        tryFetchPronouns(server, player, providers, alreadySet);
                     }
                 }, server);
     }
